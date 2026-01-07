@@ -1,25 +1,20 @@
 {
-  "name": "qa-audit",
+  "name": "qa-audit-site-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "type": "module",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/AlexL-boop/qa-audit-site.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/AlexL-boop/qa-audit-site/issues"
-  },
-  "homepage": "https://github.com/AlexL-boop/qa-audit-site#readme",
   "dependencies": {
-    "express": "^5.2.1",
-    "node-fetch": "^3.3.2"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^7.0.12",
+    "puppeteer": "^23.11.1",
+    "lighthouse": "^12.1.0",
+    "chrome-launcher": "^1.1.2"
+
   }
 }
+
