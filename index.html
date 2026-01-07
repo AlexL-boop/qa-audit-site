@@ -1,0 +1,1917 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>QA Audit Site</title>
+
+  <!-- ✅ Оставляем прежний шрифт (как было в полном index.html ранее) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css" />
+
+  <style>
+    /* --- UI Kit layout tuning: left ANALYTICS, right SCHEDULE (compact) --- */
+    #uiKitBlock .uikit-grid{
+      display:grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap:12px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      #uiKitBlock .uikit-grid{ grid-template-columns: 1fr; }
+    }
+
+    /* compact right column (SCHEDULE) */
+    #uiKitBlock .uikit-compact{ font-size: 0.92em; }
+    #uiKitBlock .uikit-compact .proto-card{ border-radius: 18px; }
+    #uiKitBlock .uikit-compact .proto-card-head{ margin-bottom: 8px; }
+    #uiKitBlock .uikit-compact .toggle-rows .toggle-row{ padding: 10px 12px; }
+    #uiKitBlock .uikit-compact .toggle-title{ font-size: 12px; letter-spacing: .06em; }
+    #uiKitBlock .uikit-compact .toggle-sub{ font-size: 12px; opacity: .85; }
+
+    /* --- QUALITY TEMPERATURE compact (under Lighthouse) --- */
+    #qualityTempBlock{ font-size: 0.92em; }
+    #qualityTempBlock .proto-card{ border-radius: 18px; }
+    #qualityTempBlock .proto-card-head{ margin-bottom: 8px; }
+    #qualityTempBlock .temp-panel{ gap:10px; }
+    #qualityTempBlock .temp-btn{ width:42px; height:42px; border-radius: 16px; }
+    #qualityTempBlock .temp-value{ font-size: 28px; line-height: 1.1; }
+    #qualityTempBlock .ring{ width:98px; height:98px; }
+    #qualityTempBlock .ring-center .ring-pct{ font-size: 20px; line-height: 1.1; }
+    #qualityTempBlock .ring-center .ring-sub{ font-size: 11px; }
+
+    /* --- Make Audit fit one screen: compact + collapsible blocks --- */
+    .layout-audit{ gap:12px !important; }
+    .layout-audit .card.big{ padding-bottom: 10px; }
+    .audit-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .audit-grid{ grid-template-columns: 1fr; }
+    }
+
+    /* Collapsible audit blocks */
+    details.audit-block{
+      border-radius: 20px;
+      padding: 0;
+      overflow: hidden;
+    }
+    details.audit-block > summary{
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+      padding: 12px 14px;
+    }
+    details.audit-block > summary::-webkit-details-marker{ display:none; }
+    details.audit-block > summary .block-title{
+      margin: 0 !important;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    details.audit-block > summary .block-title::after{
+      content: "▾";
+      opacity: .75;
+      transform: rotate(-90deg);
+      transition: transform .15s ease;
+    }
+    details.audit-block[open] > summary .block-title::after{ transform: rotate(0deg); }
+    details.audit-block .audit-inner{ padding: 10px 14px 14px; }
+
+    /* KPI grid can hold more tiles */
+    .kpi-grid{
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+    }
+    @media (max-width: 980px){
+      .kpi-grid{ grid-template-columns: 1fr; }
+    }
+
+    /* Improvements block in scorecard */
+    .improvements{
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .improvements-title{
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: 12px;
+      opacity: .9;
+    }
+    .imp-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .imp-item{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+    .imp-item .left{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width: 0;
+    }
+    .imp-item .t{
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .imp-item .d{
+      font-size: 12px;
+      opacity: .8;
+      line-height: 1.3;
+    }
+    .imp-item .tag{
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      opacity: .9;
+      white-space: nowrap;
+      align-self:flex-start;
+    }
+
+    /* Metrics: add a small matrix table */
+    .matrix{
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+    .matrix .row{
+      display:grid;
+      grid-template-columns: 1.3fr .7fr .7fr .7fr;
+      gap:10px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      align-items:center;
+      font-size: 12px;
+    }
+    .matrix .row:first-child{ border-top: none; }
+    .matrix .hdr{
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 11px;
+      opacity: .8;
+      background: rgba(255,255,255,0.03);
+      font-weight: 600;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 11px;
+      opacity: .9;
+      white-space: nowrap;
+    }
+    .chip b{ font-weight: 600; }
+    .muted2{ opacity: .75; }
+
+    /* Risks: show risks count + risk metrics */
+    .risk-summary{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin: 10px 0 6px;
+    }
+    .risk-summary .left{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width: 0;
+    }
+    .risk-summary .title{
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .risk-summary .sub{
+      font-size: 12px;
+      opacity: .8;
+    }
+    .risk-badges{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    /* Projects fallback cards */
+    .p-card{
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      cursor:pointer;
+    }
+    .p-title{ font-weight: 600; font-size: 13px; }
+    .p-sub{ font-size: 12px; opacity: .8; line-height: 1.35; }
+    .p-tags{ display:flex; gap:8px; flex-wrap:wrap; }
+    .p-tag{
+      font-size: 11px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      opacity: .9;
+      white-space: nowrap;
+    }
+    .p-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .p-pill{
+      font-size: 11px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      opacity: .9;
+    }
+    .p-btns{ display:flex; gap:8px; flex-wrap:wrap; }
+    .p-mini{
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: transparent;
+      cursor: pointer;
+    }
+
+    /* ✅ NEW: Metrics baskets (business KPI -> QA artifacts) */
+    .baskets{
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .baskets-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 10px;
+    }
+    .baskets-title{
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: 12px;
+      opacity: .9;
+      margin: 0;
+    }
+    .baskets-sub{
+      font-size: 12px;
+      opacity: .75;
+      margin: 0;
+      line-height: 1.35;
+    }
+    .basket-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+    }
+    @media (max-width: 980px){
+      .basket-grid{ grid-template-columns: 1fr; }
+    }
+    .basket-card{
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+    }
+    .basket-kicker{
+      font-size: 11px;
+      opacity: .8;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .basket-name{
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .basket-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin: 0;
+      padding-left: 0;
+      list-style: none;
+    }
+    .basket-item{
+      display:flex;
+      gap:8px;
+      align-items:flex-start;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      padding: 10px 10px;
+    }
+    .basket-item .kpi{
+      flex: 0 0 44%;
+      min-width: 0;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .basket-item .artifact{
+      flex: 1;
+      min-width: 0;
+      font-size: 12px;
+      opacity: .85;
+      line-height: 1.35;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="time" id="time">14:41</div>
+        <h1 class="title" id="pageTitle">Проекты</h1>
+      </div>
+
+      <button class="icon-btn" id="menuBtn" aria-label="Меню">
+        <img class="icon" src="./assets/icon-menu.svg" alt="">
+      </button>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Разделы">
+      <button class="tab is-active" role="tab" aria-selected="true" data-tab="projects">Проекты</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="products">Продукты</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="audit">Аудит</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="metrics">Метрики</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="risks">Риски</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="order">Заказать</button>
+    </nav>
+
+    <main class="content">
+
+      <!-- ===================== PROJECTS ===================== -->
+      <section class="screen is-active" data-screen="projects" aria-label="Проекты">
+        <div class="layout-2col">
+
+          <article class="card big">
+            <div class="card-head">
+              <div>
+                <div class="card-kicker">ПРОЕКТЫ</div>
+                <div class="card-title">Выберите активный проект</div>
+              </div>
+              <button class="ghost-btn" title="Опции" aria-label="Опции">…</button>
+            </div>
+
+            <div class="risk-filters" style="margin:6px 0 14px;" role="group" aria-label="Режим аудита">
+              <button class="filter-btn is-active" type="button" data-audit-view="report" data-open-tab="audit">Аудит: отчёт и скоринг</button>
+              <button class="filter-btn" type="button" data-audit-view="survey1" data-open-tab="audit">Опросник: модуль 1</button>
+              <button class="filter-btn" type="button" data-audit-view="survey2" data-open-tab="audit">Опросник: модуль 2</button>
+            </div>
+
+            <div class="project-grid" id="projectsList"></div>
+
+            <div class="hint">
+              Активный проект влияет на вкладки «Аудит / Метрики / Риски».
+            </div>
+          </article>
+
+          <aside class="card big">
+            <div class="card-head">
+              <div>
+                <div class="card-kicker">STATUS</div>
+                <div class="card-title">Контекст</div>
+              </div>
+              <button class="ghost-btn" aria-label="Опции">…</button>
+            </div>
+
+            <div class="summary">
+              <div class="summary-row">
+                <span class="muted">Активный проект</span>
+                <strong id="activeProjectName">—</strong>
+              </div>
+              <div class="summary-row">
+                <span class="muted">Профиль</span>
+                <strong id="activeProjectTags">—</strong>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="hint">
+                Дальше можно подключить загрузку проектов из API.
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </section>
+
+
+      <!-- ===================== PRODUCTS ===================== -->
+      <section class="screen" data-screen="products" aria-label="Продукты">
+        <div class="layout-products">
+          <article class="card big">
+            <div class="card-head">
+              <div>
+                <div class="card-kicker">ПРОДУКТЫ</div>
+                <div class="card-title">Пакеты аудита и проверок</div>
+              </div>
+              <button class="ghost-btn" aria-label="Опции">…</button>
+            </div>
+
+            <div class="products-hero">
+              <div class="products-note">
+                Карточки — в стиле прототипа. Выберите продукт → вкладка «Заказать» заполнит форму.
+              </div>
+
+              <div class="products-total">
+                <div class="muted">All time:</div>
+                <div class="products-sum" id="productsSum">$0.00</div>
+              </div>
+            </div>
+
+            <div class="product-cards" id="productCards"></div>
+
+            <div class="bonus-strip">
+              <img src="./assets/icon-bonus.svg" alt="" class="bonus-ic">
+              <div>
+                <div class="bonus-title">Бонус</div>
+                <div class="bonus-text">Отчетность каждого шага</div>
+              </div>
+            </div>
+
+          </article>
+        </div>
+      </section>
+
+
+      <!-- ===================== AUDIT ===================== -->
+      <section class="screen" data-screen="audit" aria-label="Аудит">
+        <div class="layout-audit">
+
+          <article class="card big">
+            <div class="card-head">
+              <div>
+                <div class="card-kicker">АУДИТ</div>
+                <div class="card-title"><span id="auditTitleProject">Аудит тестирования</span></div>
+              </div>
+
+              <div class="head-actions">
+                <button class="ghost-btn" id="runCheckerBtn" title="Запустить чекер" aria-label="Запустить чекер">▶</button>
+                <button class="ghost-btn" id="resetAuditBtn" title="Сбросить" aria-label="Сбросить">⟲</button>
+              </div>
+            </div>
+
+            <div class="risk-filters" style="margin:8px 0 10px;" role="tablist" aria-label="Модули аудита">
+              <button class="filter-btn is-active" type="button" role="tab" aria-selected="true" data-audit-view="report">Отчёт и скоринг</button>
+              <button class="filter-btn" type="button" role="tab" aria-selected="false" data-audit-view="survey1">Опросник: модуль 1</button>
+              <button class="filter-btn" type="button" role="tab" aria-selected="false" data-audit-view="survey2">Опросник: модуль 2</button>
+            </div>
+
+            <div class="audit-view is-active" id="auditViewReport" data-audit-view-panel="report">
+
+              <details class="audit-block" id="valueBlock">
+                <summary><div class="block-title">Ценность / что получаете</div></summary>
+                <div class="audit-inner">
+                  <div class="value-card" style="margin:0;">
+                    <div class="value-title">Ценность которую мы доставляем</div>
+                    <ul class="value-list">
+                      <li><strong>API сервиса</strong></li>
+                      <li><strong>Чекер</strong> который проходится по чеклисту и проверяет заданные параметры</li>
+                      <li><strong>Ручной аудит</strong></li>
+                      <li><strong>Оптимизация процессов</strong>, мягкий формализм и внедрение</li>
+                      <li><strong>Внедрение лучших международных практик</strong> в процессы компании</li>
+                    </ul>
+                  </div>
+                </div>
+              </details>
+
+              <div class="audit-grid">
+
+                <details class="audit-block" id="stabilityChecklistBlock">
+                  <summary><div class="block-title">Чек-лист 0 — Стабильность и качество сайта</div></summary>
+                  <div class="audit-inner">
+                    <div class="checklist" id="checklistStability">
+                      <label class="check">
+                        <input type="checkbox" data-weight="8" data-domain="stability" data-auto="true">
+                        <span>Нет утечки технического JSON/конфигов форм в UI (не отображается как текст)</span>
+                        <em>8</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="7" data-domain="stability" data-auto="true">
+                        <span>Ключевые страницы/доки не отдают 5xx (в т.ч. соглашения/документация)</span>
+                        <em>7</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="6" data-domain="quality" data-auto="true">
+                        <span>CTA ведут на правильные маршруты (нет дублей ссылок у разных карточек)</span>
+                        <em>6</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="6" data-domain="quality" data-auto="true">
+                        <span>Контент не перемешан (описания/контакты соответствуют своему сервису)</span>
+                        <em>6</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="4" data-domain="quality" data-auto="true">
+                        <span>Нет опечаток/смешения латиницы и кириллицы (например, “cнижающая”)</span>
+                        <em>4</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="6" data-domain="observability">
+                        <span>Есть мониторинг 4xx/5xx + алерты, логирование ошибок, Sentry/аналог</span>
+                        <em>6</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="7" data-domain="stability">
+                        <span>Есть тестирование стабильности (долгие сессии, нагрузка, утечки памяти, деградация)</span>
+                        <em>7</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="5" data-domain="stability">
+                        <span>Есть smoke/regression автотесты критических сценариев + запуск по расписанию</span>
+                        <em>5</em>
+                      </label>
+                    </div>
+                    <div class="hint muted" style="margin-top:10px;">
+                      Авто-чеклисты отмечаются после нажатия Play (SEO/Best Practices/Security/Stability proxy).
+                    </div>
+                  </div>
+                </details>
+
+                <details class="audit-block" id="checklistAblock">
+                  <summary><div class="block-title">Чек-лист 1 — Процессы и контроль</div></summary>
+                  <div class="audit-inner">
+                    <div class="checklist" id="checklistA">
+                      <label class="check">
+                        <input type="checkbox" data-weight="6" data-domain="process">
+                        <span>Есть DoD/DoR, критерии приёмки</span>
+                        <em>6</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="6" data-domain="process">
+                        <span>Процессы формализованы (DoR/DoD, правила релиза, RACI)</span>
+                        <em>6</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="4" data-domain="risk">
+                        <span>Есть риск-матрица и тестирование по риску</span>
+                        <em>4</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="5" data-domain="observability">
+                        <span>Логи/метрики помогают дебажить дефекты</span>
+                        <em>5</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="5" data-domain="stability">
+                        <span>Есть регламент “stability testing” (nightly/weekly прогон + отчёт)</span>
+                        <em>5</em>
+                      </label>
+                    </div>
+                  </div>
+                </details>
+
+                <details class="audit-block" id="checklistBblock">
+                  <summary><div class="block-title">Чек-лист 2 — Автоматизация и данные</div></summary>
+                  <div class="audit-inner">
+                    <div class="checklist" id="checklistB">
+                      <label class="check">
+                        <input type="checkbox" data-weight="7" data-domain="automation">
+                        <span>Автотесты в CI и реально блокируют регресс</span>
+                        <em>7</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="6" data-domain="quality">
+                        <span>Флейки управляются (детект → карантин → ремонт)</span>
+                        <em>6</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="5" data-domain="data">
+                        <span>Тест-данные управляемы (сидирование/фикстуры/изоляция)</span>
+                        <em>5</em>
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" data-weight="6" data-domain="stability">
+                        <span>Есть стабильностный прогон (long-run) + контроль утечек/памяти/дескрипторов</span>
+                        <em>6</em>
+                      </label>
+                    </div>
+                  </div>
+                </details>
+
+                <details class="audit-block" id="surveyQuickBlock">
+                  <summary><div class="block-title">Опросник (1–5)</div></summary>
+                  <div class="audit-inner">
+                    <div class="q" data-qweight="8" data-domain="process">
+                      <div class="q-title">Процессы: насколько предсказуем релиз?</div>
+                      <div class="q-scale" role="radiogroup" aria-label="Оценка предсказуемости релиза">
+                        <label><input type="radio" name="q1" value="1">1</label>
+                        <label><input type="radio" name="q1" value="2">2</label>
+                        <label><input type="radio" name="q1" value="3" checked>3</label>
+                        <label><input type="radio" name="q1" value="4">4</label>
+                        <label><input type="radio" name="q1" value="5">5</label>
+                      </div>
+                      <div class="q-meta">Вес: 8</div>
+                    </div>
+
+                    <div class="q" data-qweight="7" data-domain="automation" style="margin-top:10px;">
+                      <div class="q-title">Автоматизация: насколько она стабильно полезна?</div>
+                      <div class="q-scale" role="radiogroup" aria-label="Оценка полезности автоматизации">
+                        <label><input type="radio" name="q2" value="1">1</label>
+                        <label><input type="radio" name="q2" value="2">2</label>
+                        <label><input type="radio" name="q2" value="3" checked>3</label>
+                        <label><input type="radio" name="q2" value="4">4</label>
+                        <label><input type="radio" name="q2" value="5">5</label>
+                      </div>
+                      <div class="q-meta">Вес: 7</div>
+                    </div>
+
+                    <div class="q" data-qweight="5" data-domain="risk" style="margin-top:10px;">
+                      <div class="q-title">Риски: насколько вы понимаете «где может упасть»?</div>
+                      <div class="q-scale" role="radiogroup" aria-label="Оценка понимания рисков">
+                        <label><input type="radio" name="q3" value="1">1</label>
+                        <label><input type="radio" name="q3" value="2">2</label>
+                        <label><input type="radio" name="q3" value="3" checked>3</label>
+                        <label><input type="radio" name="q3" value="4">4</label>
+                        <label><input type="radio" name="q3" value="5">5</label>
+                      </div>
+                      <div class="q-meta">Вес: 5</div>
+                    </div>
+
+                    <div class="hint" id="checkerStatus" style="margin-top:12px;">Чекер: не запускался.</div>
+                  </div>
+                </details>
+
+                <details class="audit-block" id="lighthouseBlock" open>
+                  <summary><div class="block-title">Lighthouse / SEO / Best Practices / Security (proxy)</div></summary>
+                  <div class="audit-inner">
+                    <div class="hint">
+                      <div class="muted">URL сайта для проверки</div>
+                      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+                        <input id="siteUrlInput" type="url" placeholder="https://example.com"
+                          style="min-width:280px; padding:10px 12px; border-radius:18px; border:2px solid var(--line); background:transparent;">
+                        <button class="btn primary" type="button" id="runLighthouseBtn">
+                          <img src="./assets/ui-check.svg" alt="" class="btn-ic">Play
+                        </button>
+                      </div>
+                      <div class="hint muted" style="margin-top:10px;">
+                        Play запускает скоринг (proxy): SEO / Best Practices / Security + “GA-like” сигнал (UX/engagement) и ставит авто-галочки.
+                      </div>
+                    </div>
+
+                    <div id="lighthouseResult" class="hint" style="margin-top:12px;">Нет данных. Нажми Play.</div>
+                  </div>
+                </details>
+
+                <details class="audit-block" id="qualityTempBlock">
+                  <summary><div class="block-title">QUALITY TEMPERATURE</div></summary>
+                  <div class="audit-inner">
+                    <div class="proto-card">
+                      <div class="proto-card-head">
+                        <div>
+                          <div class="proto-kicker">QUALITY TEMPERATURE</div>
+                          <div class="proto-text">Градусы + проценты + плюс/минус.</div>
+                        </div>
+                        <button class="ghost-btn" aria-label="Опции">…</button>
+                      </div>
+
+                      <div class="temp-panel">
+                        <div class="temp-controls">
+                          <button class="temp-btn" type="button" id="tempMinus" aria-label="Минус"><span class="temp-ic">−</span></button>
+
+                          <div class="temp-main">
+                            <div class="temp-value"><span id="tempNumber">18.5</span><span class="temp-unit">°C</span></div>
+                            <div class="temp-meta">
+                              <div id="tempLabel">Warm</div>
+                              <div class="muted" id="tempK">2400k</div>
+                            </div>
+                          </div>
+
+                          <button class="temp-btn" type="button" id="tempPlus" aria-label="Плюс"><span class="temp-ic">+</span></button>
+                        </div>
+
+                        <div class="ring-wrap">
+                          <svg class="ring" viewBox="0 0 120 120" aria-label="Процент готовности">
+                            <circle class="ring-bg" cx="60" cy="60" r="46"></circle>
+                            <circle class="ring-fg" cx="60" cy="60" r="46" id="ringFg"></circle>
+                            <circle class="ring-dot" cx="28" cy="92" r="3"></circle>
+                          </svg>
+
+                          <div class="ring-center">
+                            <div class="ring-pct"><span id="tempPercent">75.4</span>%</div>
+                            <div class="ring-sub" id="percentText">Готовность качества</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="hint muted" style="margin-top:10px;">
+                        Процент можно привязать к итоговому score или к стабильности.
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                <details class="audit-block" id="uiKitBlock">
+                  <summary><div class="block-title">UI Components (как в прототипе)</div></summary>
+                  <div class="audit-inner">
+                    <div class="uikit-grid">
+                      <div>
+                        <div class="proto-card">
+                          <div class="proto-card-head">
+                            <div>
+                              <div class="proto-kicker">ANALYTICS</div>
+                              <div class="proto-text">Ты расслабься — мы посчитаем. Выбери режим отчёта.</div>
+                            </div>
+                            <button class="ghost-btn" aria-label="Опции">…</button>
+                          </div>
+
+                          <div class="pill-select">
+                            <select id="analyticsModeSelect" aria-label="Режим аналитики">
+                              <option value="checker">CHECKER (процессы формализованы)</option>
+                              <option value="lighthouse" selected>LIGHTHOUSE (SEO / Perf / Best Practices)</option>
+                              <option value="security">SECURITY (proxy через best-practices)</option>
+                              <option value="report">REPORT (PDF в стиле сайта)</option>
+                            </select>
+                            <span class="pill-chevron" aria-hidden="true">
+                              <svg viewBox="0 0 24 24" width="18" height="18">
+                                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                              </svg>
+                            </span>
+                          </div>
+
+                          <div class="hint muted" id="analyticsModeHint" style="margin-top:10px;">
+                            Выбрано: LIGHTHOUSE (SEO / Perf / Best Practices)
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="uikit-compact">
+                        <div class="proto-card">
+                          <div class="proto-card-head">
+                            <div>
+                              <div class="proto-kicker">SCHEDULE</div>
+                              <div class="proto-text">Включай/выключай модули аудита как в расписании.</div>
+                            </div>
+                            <button class="ghost-btn" aria-label="Опции">…</button>
+                          </div>
+
+                          <div class="toggle-rows">
+                            <div class="toggle-row">
+                              <div class="toggle-left">
+                                <div class="toggle-title">CHECKER</div>
+                                <div class="toggle-sub">процессы формализованы + чек-листы</div>
+                              </div>
+                              <label class="switch"><input type="checkbox" id="toggleChecker" checked><span class="slider" aria-hidden="true"></span></label>
+                            </div>
+
+                            <div class="toggle-row">
+                              <div class="toggle-left">
+                                <div class="toggle-title">LIGHTHOUSE</div>
+                                <div class="toggle-sub">SEO / Performance / Best Practices</div>
+                              </div>
+                              <label class="switch"><input type="checkbox" id="toggleLighthouse" checked><span class="slider" aria-hidden="true"></span></label>
+                            </div>
+
+                            <div class="toggle-row">
+                              <div class="toggle-left">
+                                <div class="toggle-title">SECURITY</div>
+                                <div class="toggle-sub">security-check proxy (headers/ best-practices)</div>
+                              </div>
+                              <label class="switch"><input type="checkbox" id="toggleSecurity" checked><span class="slider" aria-hidden="true"></span></label>
+                            </div>
+
+                            <div class="toggle-row">
+                              <div class="toggle-left">
+                                <div class="toggle-title">PDF REPORT</div>
+                                <div class="toggle-sub">генерировать PDF в стиле сайта</div>
+                              </div>
+                              <label class="switch"><input type="checkbox" id="togglePdf" checked><span class="slider" aria-hidden="true"></span></label>
+                            </div>
+                          </div>
+
+                          <div class="hint muted" style="margin-top:10px;">
+                            Play применяет авто-чеклисты только если включён LIGHTHOUSE/SECURITY.
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </details>
+
+              </div>
+            </div>
+
+            <div class="audit-view" id="auditViewSurvey1" data-audit-view-panel="survey1" hidden>
+              <details class="audit-block" open>
+                <summary><div class="block-title">Опросник: модуль 1 — Контроль качества</div></summary>
+                <div class="audit-inner">
+                  <div class="hint">
+                    Сюда можно вынести расширенные вопросы по процессам, тест-дизайну, DoD/DoR, risk-based тестированию и метрикам.
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div class="audit-view" id="auditViewSurvey2" data-audit-view-panel="survey2" hidden>
+              <details class="audit-block" open>
+                <summary><div class="block-title">Опросник: модуль 2 — Автоматизация и релиз</div></summary>
+                <div class="audit-inner">
+                  <div class="hint">
+                    Сюда можно вынести вопросы по CI/CD, качеству автотестов, стабильности окружений, тест-данным, релизному процессу и quality-gates.
+                  </div>
+                </div>
+              </details>
+            </div>
+
+          </article>
+
+          <!-- RIGHT COLUMN -->
+          <aside class="card big scorecard">
+            <div class="card-head">
+              <div>
+                <div class="card-kicker">ОТЧЁТ</div>
+                <div class="card-title">Скоринг и выгрузка</div>
+              </div>
+              <button class="ghost-btn" id="downloadReportBtn" title="Скачать отчёт" aria-label="Скачать отчёт">⤓</button>
+            </div>
+
+            <div class="card-body">
+              <div class="scorebox">
+                <div class="score-big"><span id="scoreTotal">0</span>%</div>
+                <div class="score-sub" id="scoreLabel">Считаю…</div>
+              </div>
+
+              <div class="subscores">
+                <div class="sub"><span>Процессы</span><strong id="sProcess">0%</strong></div>
+                <div class="sub"><span>Автоматизация</span><strong id="sAuto">0%</strong></div>
+                <div class="sub"><span>Качество</span><strong id="sQuality">0%</strong></div>
+                <div class="sub"><span>Данные/наблюдаемость</span><strong id="sDataObs">0%</strong></div>
+                <div class="sub"><span>Риски</span><strong id="sRisk">0%</strong></div>
+                <div class="sub"><span>Стабильность</span><strong id="sStability">0%</strong></div>
+              </div>
+
+              <div class="recommend">
+                <div class="recommend-title">Рекомендация</div>
+                <div class="recommend-text" id="recommendText">—</div>
+              </div>
+
+              <div class="improvements" id="improvementsBlock">
+                <div class="improvements-title">Улучшения по сайту</div>
+                <div class="hint muted" id="improvementsHint" style="margin-bottom:8px;">
+                  Введи сайт слева и нажми Play — появится список конкретных задач + авто-чеклисты.
+                </div>
+                <div class="imp-list" id="improvementsList">
+                  <div class="imp-item">
+                    <div class="left">
+                      <div class="t">Нет данных</div>
+                      <div class="d">Запусти Play для URL.</div>
+                    </div>
+                    <span class="tag">waiting</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hint">⤓ скачивает Markdown-отчёт по результатам.</div>
+            </div>
+          </aside>
+
+        </div>
+      </section>
+
+
+      <!-- ===================== METRICS ===================== -->
+      <section class="screen" data-screen="metrics" aria-label="Метрики">
+        <div class="layout-2col">
+
+          <article class="card big">
+            <div class="card-head">
+              <div>
+                <div class="card-kicker">МЕТРИКИ</div>
+                <div class="card-title"><span id="metricsTitleProject">Недельный срез</span></div>
+              </div>
+              <button class="ghost-btn" aria-label="Опции">…</button>
+            </div>
+
+            <div class="metrics-top">
+              <div class="select-pill">
+                <span>Источник</span>
+                <select id="sourceSelect" aria-label="Источник метрик">
+                  <option value="testruns">Test Runs</option>
+                  <option value="incidents">Incidents</option>
+                  <option value="delivery">Delivery</option>
+                </select>
+              </div>
+
+              <div class="mini-live">
+                <div class="mini-live-title">LIVE</div>
+                <div class="mini-live-value" id="liveTime">—</div>
+              </div>
+            </div>
+
+            <div class="chart-wrap">
+              <div id="chartContainer" aria-label="График метрик"></div>
+            </div>
+
+            <div class="matrix" aria-label="Матрик метрик" id="metricsMatrix">
+              <div class="row hdr">
+                <div>Metric</div><div>Now</div><div>Target</div><div>Trend</div>
+              </div>
+              <div class="row">
+                <div>Release frequency</div><div><span class="chip"><b id="mRelNow">2/w</b></span></div><div><span class="chip"><b id="mRelTarget">4/w</b></span></div><div><span class="chip">↗</span></div>
+              </div>
+              <div class="row">
+                <div>Pass rate</div><div><span class="chip"><b id="mPassNow">92%</b></span></div><div><span class="chip"><b id="mPassTarget">97%</b></span></div><div><span class="chip">→</span></div>
+              </div>
+              <div class="row">
+                <div>Stability score</div><div><span class="chip"><b id="mStabNow">74%</b></span></div><div><span class="chip"><b id="mStabTarget">90%</b></span></div><div><span class="chip">↗</span></div>
+              </div>
+              <div class="row">
+                <div>Escaped defects</div><div><span class="chip"><b id="mEscNow">6</b></span></div><div><span class="chip"><b id="mEscTarget">≤2</b></span></div><div><span class="chip">↘</span></div>
+              </div>
+              <div class="row">
+                <div>Cost of quality</div><div><span class="chip"><b id="mCoqNow">$</b><span class="muted2">12k</span></span></div><div><span class="chip"><b id="mCoqTarget">$</b><span class="muted2">8k</span></span></div><div><span class="chip">↘</span></div>
+              </div>
+            </div>
+
+            <!-- ✅ NEW: 4 baskets with KPI -> QA artifact -->
+            <div class="baskets" aria-label="Корзины KPI и QA-артефакты">
+              <div class="baskets-head">
+                <div>
+                  <p class="baskets-title">Корзины KPI → QA-артефакт</p>
+                  <p class="baskets-sub">Веб-сервис: что именно QA “двигает” в бизнес-метриках.</p>
+                </div>
+              </div>
+
+              <div class="basket-grid">
+                <div class="basket-card">
+                  <div class="basket-kicker">1) Revenue</div>
+                  <div class="basket-name">Выручка</div>
+                  <ul class="basket-list">
+                    <li class="basket-item">
+                      <div class="kpi">Conversion Rate (CR)</div>
+                      <div class="artifact">E2E smoke по воронке (landing→signup→checkout), регресс-сьют “money flow”</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">Revenue / GMV</div>
+                      <div class="artifact">Release checklist + quality gates (не выпускать при красных критичных проверках)</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">AOV</div>
+                      <div class="artifact">Тесты промо/скидок/пакетов/upsell, проверка корректности расчётов</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">Checkout/Payment Success</div>
+                      <div class="artifact">Мониторинг синтетических транзакций + автотесты интеграции платежей</div>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="basket-card">
+                  <div class="basket-kicker">2) Cost</div>
+                  <div class="basket-name">Затраты / OPEX</div>
+                  <ul class="basket-list">
+                    <li class="basket-item">
+                      <div class="kpi">Support Ticket Volume</div>
+                      <div class="artifact">Матрица “top issues”, регресс на частые обращения, чек-лист UX/ошибок</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">Engineering Rework Rate</div>
+                      <div class="artifact">Definition of Done + code review checklist + тест-дизайн (чёткие acceptance criteria)</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">Cost per Incident</div>
+                      <div class="artifact">Postmortem template + RCA + prevention actions в регрессе</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">Cost per Order (CPO)</div>
+                      <div class="artifact">Перфоманс-тесты + оптимизация “узких мест” (меньше отказов/повторов операций)</div>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="basket-card">
+                  <div class="basket-kicker">3) Risk</div>
+                  <div class="basket-name">Риски</div>
+                  <ul class="basket-list">
+                    <li class="basket-item">
+                      <div class="kpi">Availability / Uptime %</div>
+                      <div class="artifact">Нагрузочные/стресс-тесты + SLO/SLA мониторинг + canary checks</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">Downtime / Incident rate</div>
+                      <div class="artifact">Observability checklist (логи/метрики/алерты) + on-call runbooks</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">Data integrity incidents</div>
+                      <div class="artifact">Контракт-тесты API + проверки миграций БД + data validation rules</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">Security incidents</div>
+                      <div class="artifact">Security checklist (OWASP), тесты ролей/прав, SAST/DAST в CI</div>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="basket-card">
+                  <div class="basket-kicker">4) Speed</div>
+                  <div class="basket-name">Скорость поставки</div>
+                  <ul class="basket-list">
+                    <li class="basket-item">
+                      <div class="kpi">Lead Time for Changes</div>
+                      <div class="artifact">Автоматизация регресса + тестовые данные/фикстуры + “one-click” тест-прогон в CI</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">Deployment Frequency</div>
+                      <div class="artifact">Stable CI pipeline + быстрые smoke + тест-пирамида (быстрое ядро проверок)</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">Change Failure Rate</div>
+                      <div class="artifact">Release readiness report + risk-based тестирование + backward compatibility</div>
+                    </li>
+                    <li class="basket-item">
+                      <div class="kpi">MTTR</div>
+                      <div class="artifact">Runbooks + алерты с контекстом + диагностические чек-листы</div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="hint" style="margin-top:10px;">
+                Совет: эти корзины можно “подсвечивать” на аудит-странице в рекомендациях: что даст максимум эффекта на Revenue/Cost/Risk/Speed.
+              </div>
+            </div>
+
+            <div class="hint">Матрик — быстрый свод целей/трендов (позже подключишь к реальным данным).</div>
+          </article>
+
+          <aside class="card big">
+            <div class="card-head">
+              <div>
+                <div class="card-kicker">KPI</div>
+                <div class="card-title">Быстрые KPI</div>
+              </div>
+              <button class="ghost-btn" aria-label="Опции">…</button>
+            </div>
+
+            <div class="kpi-grid">
+              <div class="kpi"><div class="muted">Flaky rate</div><div class="kpi-value" id="kpiFlaky">—</div></div>
+              <div class="kpi"><div class="muted">MTTR</div><div class="kpi-value" id="kpiMttr">—</div></div>
+              <div class="kpi"><div class="muted">Lead time</div><div class="kpi-value" id="kpiLead">—</div></div>
+              <div class="kpi"><div class="muted">Escaped defects</div><div class="kpi-value" id="kpiEscaped">—</div></div>
+
+              <div class="kpi"><div class="muted">LTV</div><div class="kpi-value" id="kpiLtv">—</div></div>
+              <div class="kpi"><div class="muted">Баги</div><div class="kpi-value" id="kpiBugs">—</div></div>
+              <div class="kpi"><div class="muted">Критичные тесты</div><div class="kpi-value" id="kpiCriticalTests">—</div></div>
+              <div class="kpi"><div class="muted">Матрик</div><div class="kpi-value" id="kpiMatrix">OK</div></div>
+            </div>
+
+            <div class="hint">LTV/Баги/Критичные тесты — подключаются из BI/Jira/TestOps.</div>
+          </aside>
+
+        </div>
+      </section>
+
+
+      <!-- ===================== RISKS ===================== -->
+      <section class="screen" data-screen="risks" aria-label="Риски">
+        <div class="layout-2col">
+
+          <article class="card big">
+            <div class="card-head">
+              <div>
+                <div class="card-kicker">РИСКИ</div>
+                <div class="card-title"><span id="risksTitleProject">Риск-панель</span></div>
+              </div>
+              <button class="ghost-btn" aria-label="Опции">…</button>
+            </div>
+
+            <div class="risk-summary">
+              <div class="left">
+                <div class="title">Риски проекта</div>
+                <div class="sub">Технические / продуктовые / процессные + веб-риски.</div>
+              </div>
+              <div class="risk-badges">
+                <span class="chip">Всего: <b id="riskCountAll">—</b></span>
+                <span class="chip">High: <b id="riskCountHigh">—</b></span>
+                <span class="chip">Med: <b id="riskCountMed">—</b></span>
+                <span class="chip">Low: <b id="riskCountLow">—</b></span>
+              </div>
+            </div>
+
+            <div class="risk-filters" role="group" aria-label="Фильтр рисков">
+              <button class="filter-btn is-active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="high">High</button>
+              <button class="filter-btn" data-filter="med">Med</button>
+              <button class="filter-btn" data-filter="low">Low</button>
+            </div>
+
+            <div class="risk-tools" aria-label="Инструменты рисков">
+              <label class="risk-tool">
+                <span>Категория</span>
+                <select id="riskCategorySelect">
+                  <option value="all">Все</option>
+                  <option value="web">Web/Сайт</option>
+                  <option value="project">Проектные</option>
+                  <option value="process">Процессные</option>
+                  <option value="product">Продуктовые</option>
+                  <option value="relationship">Отношенческие</option>
+                  <option value="budget">Бюджетные</option>
+                  <option value="marketing">Маркетинговые</option>
+                  <option value="training">Обученческие</option>
+                </select>
+              </label>
+
+              <label class="risk-tool">
+                <span>Сортировать</span>
+                <select id="riskSortSelect">
+                  <option value="severity_desc">По важности (↓)</option>
+                  <option value="severity_asc">По важности (↑)</option>
+                  <option value="title_asc">По названию (A→Z)</option>
+                  <option value="category_asc">По категории</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="risk-table" id="riskTable"></div>
+          </article>
+
+          <aside class="card big">
+            <div class="card-head">
+              <div>
+                <div class="card-kicker">ACTIONS</div>
+                <div class="card-title">Быстрый план</div>
+              </div>
+              <button class="ghost-btn" aria-label="Опции">…</button>
+            </div>
+
+            <ul class="bullets" id="riskActions">
+              <li>Определить quality-gates: smoke, контракт, перф-бюджет.</li>
+              <li>Стабилизировать окружения и тест-данные.</li>
+              <li>Убрать топ-10 флейков.</li>
+              <li>Поставить мониторинг 5xx + алерты и запрет “JSON в UI”.</li>
+            </ul>
+
+            <div class="risk-actions">
+              <button class="btn primary" type="button">
+                <img src="./assets/ui-check.svg" alt="" class="btn-ic">
+                Принять план
+              </button>
+              <button class="btn" type="button">
+                <img src="./assets/ui-close.svg" alt="" class="btn-ic">
+                Отложить
+              </button>
+            </div>
+          </aside>
+
+        </div>
+      </section>
+
+
+      <!-- ===================== ORDER ===================== -->
+      <section class="screen" data-screen="order" aria-label="Заказать">
+        <div class="layout-2col">
+
+          <article class="card big">
+            <div class="card-head">
+              <div>
+                <div class="card-kicker">ЗАКАЗАТЬ</div>
+                <div class="card-title">Запросить аудит</div>
+              </div>
+              <button class="ghost-btn" aria-label="Опции">…</button>
+            </div>
+
+            <div class="card-body">
+              <form class="order-form" id="orderForm">
+                <label class="field">
+                  <span>Компания / проект</span>
+                  <input type="text" name="project" id="orderProject" placeholder="Например: Marketplace / Mobile" required>
+                </label>
+
+                <label class="field">
+                  <span>Продукт</span>
+                  <input type="text" name="product" id="orderProduct" placeholder="Например: процессный аудит" required>
+                </label>
+
+                <label class="field">
+                  <span>Telegram</span>
+                  <input type="text" name="telegram" id="orderTelegram" placeholder="@nickname" required>
+                </label>
+
+                <label class="field">
+                  <span>Комментарий</span>
+                  <textarea name="pain" id="orderPain" rows="6" placeholder="Коротко: релизы падают, флейки, нет метрик…"></textarea>
+                </label>
+
+                <div class="hint" id="tgDeepLinkHint" style="display:none;">
+                  Чтобы бот мог написать клиенту: <a id="tgDeepLink" href="#" target="_blank" rel="noopener">Открыть бота</a>
+                </div>
+
+                <div class="form-actions">
+                  <button class="cta" type="submit" id="orderSubmitBtn">Заказать и отправить отчёт</button>
+                  <span class="hint" id="orderHint">Отправка в Telegram работает через backend + бота.</span>
+                </div>
+              </form>
+            </div>
+          </article>
+
+          <aside class="card big">
+            <div class="card-head">
+              <div>
+                <div class="card-kicker">ПОДСКАЗКА</div>
+                <div class="card-title">Что нужно для старта</div>
+              </div>
+              <button class="ghost-btn" aria-label="Опции">…</button>
+            </div>
+
+            <ul class="bullets">
+              <li>Список окружений, доступы (если есть), SLA ожидания.</li>
+              <li>CI/CD и репозиторий (read-only достаточно).</li>
+              <li>Фиксация боли: скорость, флейки, дефекты, регресс.</li>
+            </ul>
+          </aside>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Your existing app -->
+  <script src="./app.js"></script>
+
+  <script>
+    // ====== MAIN TABS fallback (if app.js doesn't wire tabs) ======
+    (function(){
+      const tabs = document.querySelectorAll('.tabs .tab');
+      const screens = document.querySelectorAll('.screen');
+      function setActive(tabKey){
+        tabs.forEach(t=>t.classList.toggle('is-active', t.getAttribute('data-tab')===tabKey));
+        screens.forEach(s=>s.classList.toggle('is-active', s.getAttribute('data-screen')===tabKey));
+        const titleMap = {projects:'Проекты', products:'Продукты', audit:'Аудит', metrics:'Метрики', risks:'Риски', order:'Заказать'};
+        const h = document.getElementById('pageTitle');
+        if (h) h.textContent = titleMap[tabKey] || 'Проекты';
+      }
+      tabs.forEach(t=>{
+        t.addEventListener('click', ()=>{
+          setActive(t.getAttribute('data-tab'));
+        });
+      });
+      const current = document.querySelector('.tabs .tab.is-active')?.getAttribute('data-tab') || 'projects';
+      setActive(current);
+    })();
+  </script>
+
+  <script>
+    // === Audit nested view switch (report / survey modules) ===
+    (function () {
+      function setPressed(btn, pressed) {
+        btn.classList.toggle('is-active', pressed);
+        if (btn.getAttribute('role') === 'tab') btn.setAttribute('aria-selected', pressed ? 'true' : 'false');
+      }
+      function openMainTab(tabKey) {
+        var tabBtn = document.querySelector('.tabs .tab[data-tab="' + tabKey + '"]');
+        if (tabBtn) tabBtn.click();
+      }
+      function setAuditView(viewKey) {
+        var panels = document.querySelectorAll('[data-audit-view-panel]');
+        panels.forEach(function (p) {
+          var isTarget = p.getAttribute('data-audit-view-panel') === viewKey;
+          if (isTarget) { p.removeAttribute('hidden'); p.classList.add('is-active'); }
+          else { p.setAttribute('hidden', ''); p.classList.remove('is-active'); }
+        });
+        var buttons = document.querySelectorAll('[data-audit-view]');
+        buttons.forEach(function (b) { setPressed(b, b.getAttribute('data-audit-view') === viewKey); });
+      }
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-audit-view]');
+        if (!btn) return;
+        var view = btn.getAttribute('data-audit-view');
+        var openTab = btn.getAttribute('data-open-tab');
+        if (openTab) openMainTab(openTab);
+        setAuditView(view);
+      });
+      setAuditView('report');
+    })();
+  </script>
+
+  <script>
+    // ===================== Projects: add MORE projects (fallback renderer) =====================
+    (function(){
+      const list = document.getElementById('projectsList');
+      if (!list) return;
+      if (list.children && list.children.length > 0) return;
+
+      const projects = [
+        { id:'p1', name:'Cargonomica – Public Website', tags:['Web','SEO','Stability'], status:'Active', focus:'5xx pages, JSON leakage, CTA routes, Lighthouse proxy', score:72 },
+        { id:'p2', name:'Audit Dashboard (Prototype)', tags:['UI','UX','Analytics'], status:'Active', focus:'One-screen Audit, improvements list, report to Telegram', score:79 },
+        { id:'p3', name:'Mobile App – Checkout', tags:['iOS','Android','Payments'], status:'Active', focus:'Critical tests, MTTR, escaped defects', score:68 },
+        { id:'p4', name:'API Platform – Auth', tags:['API','Security','IAM'], status:'Active', focus:'Headers, rate-limit, contract tests', score:74 },
+        { id:'p5', name:'Admin Panel – Backoffice', tags:['Web','RBAC','Regression'], status:'Paused', focus:'Flaky suite, CI gates, risk matrix', score:63 },
+        { id:'p6', name:'Marketing Landing Pack', tags:['SEO','Perf','Content'], status:'Active', focus:'Conversion, bounce, speed budget', score:70 },
+        { id:'p7', name:'Payments Gateway', tags:['PCI','Security','SLA'], status:'Active', focus:'Incidents, uptime, monitoring', score:66 },
+        { id:'p8', name:'Search + Relevance', tags:['Quality','Data','A/B'], status:'Active', focus:'Metrics matrix, LTV, experiments', score:77 },
+        { id:'p9', name:'B2B Portal', tags:['B2B','Docs','Support'], status:'Active', focus:'Docs uptime, broken links, support funnels', score:69 },
+        { id:'p10', name:'Warehouse Ops', tags:['Stability','Long-run','Observability'], status:'Active', focus:'Nightly stability, memory leaks, logs', score:71 },
+        { id:'p11', name:'CRM Integrations', tags:['API','ETL','Monitoring'], status:'Active', focus:'Contract tests, retries, dead-letter', score:73 },
+        { id:'p12', name:'Customer Support Widget', tags:['Web','UX','Perf'], status:'Active', focus:'Lighthouse + engagement proxy', score:76 },
+        { id:'p13', name:'Partner API v2', tags:['API','Versioning','Docs'], status:'Active', focus:'Swagger quality, breaking changes', score:65 },
+        { id:'p14', name:'Mobile Push / Notifications', tags:['Mobile','Reliability'], status:'Active', focus:'Delivery rate, retries, incidents', score:67 },
+        { id:'p15', name:'Reports & BI', tags:['Data','KPI','LTV'], status:'Active', focus:'KPI matrix, bugs, critical tests', score:75 },
+        { id:'p16', name:'Security Hardening Sprint', tags:['Security','Headers','CSP'], status:'Active', focus:'Security proxy checklist, hardening plan', score:64 },
+      ];
+
+      function tagHtml(tags){
+        return tags.map(t=>`<span class="p-tag">${t}</span>`).join('');
+      }
+
+      function setActiveProject(p){
+        localStorage.setItem('activeProjectId', p.id);
+        localStorage.setItem('activeProjectName', p.name);
+        localStorage.setItem('activeProjectTags', p.tags.join(' • '));
+
+        const n = document.getElementById('activeProjectName');
+        const t = document.getElementById('activeProjectTags');
+        const aTitle = document.getElementById('auditTitleProject');
+        const mTitle = document.getElementById('metricsTitleProject');
+        const rTitle = document.getElementById('risksTitleProject');
+        if (n) n.textContent = p.name;
+        if (t) t.textContent = p.tags.join(' • ');
+        if (aTitle) aTitle.textContent = `Аудит: ${p.name}`;
+        if (mTitle) mTitle.textContent = `Метрики: ${p.name}`;
+        if (rTitle) rTitle.textContent = `Риски: ${p.name}`;
+      }
+
+      list.innerHTML = projects.map(p => `
+        <div class="p-card" data-pid="${p.id}" role="button" tabindex="0" aria-label="Выбрать проект ${p.name}">
+          <div class="p-row">
+            <div class="p-title">${p.name}</div>
+            <span class="p-pill">${p.status}</span>
+          </div>
+          <div class="p-sub">${p.focus}</div>
+          <div class="p-tags">${tagHtml(p.tags)}</div>
+          <div class="p-row">
+            <div class="p-sub">Score: <b>${p.score}%</b></div>
+            <div class="p-btns">
+              <button class="p-mini" type="button" data-open="audit">Аудит</button>
+              <button class="p-mini" type="button" data-open="metrics">Метрики</button>
+              <button class="p-mini" type="button" data-open="risks">Риски</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      const savedId = localStorage.getItem('activeProjectId');
+      const defaultProject = projects.find(x=>x.id===savedId) || projects[0];
+      setActiveProject(defaultProject);
+
+      list.addEventListener('click', (e)=>{
+        const card = e.target.closest('.p-card');
+        if (!card) return;
+        const p = projects.find(x=>x.id===card.getAttribute('data-pid'));
+        if (!p) return;
+
+        setActiveProject(p);
+
+        const open = e.target.closest('button[data-open]')?.getAttribute('data-open');
+        if (open) {
+          const tab = document.querySelector(`.tabs .tab[data-tab="${open}"]`);
+          if (tab) tab.click();
+        }
+      });
+
+      list.addEventListener('keydown', (e)=>{
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const card = e.target.closest('.p-card');
+        if (!card) return;
+        card.click();
+      });
+    })();
+  </script>
+
+  <script>
+    // ===================== Products: simple fallback cards =====================
+    (function(){
+      const box = document.getElementById('productCards');
+      if (!box) return;
+      if (box.children && box.children.length > 0) return;
+
+      const products = [
+        { id:'prd1', name:'Process QA Audit', price:1200, desc:'DoR/DoD, RACI, risk-based тестирование, quality-gates.' },
+        { id:'prd2', name:'Automation Stabilization', price:900, desc:'Флейки, карантин, CI стабильность, отчётность.' },
+        { id:'prd3', name:'Lighthouse + SEO + Security (proxy)', price:450, desc:'Play скоринг + авто-чеклисты + список улучшений.' },
+        { id:'prd4', name:'Stability Testing Setup', price:800, desc:'Long-run, nightly прогон, утечки, мониторинг, алерты.' },
+      ];
+
+      function money(n){ return `$${n.toFixed(2)}`; }
+
+      box.innerHTML = products.map(p=>`
+        <div class="p-card" style="cursor:pointer" data-prd="${p.id}">
+          <div class="p-row">
+            <div class="p-title">${p.name}</div>
+            <span class="p-pill">${money(p.price)}</span>
+          </div>
+          <div class="p-sub">${p.desc}</div>
+          <div class="p-btns">
+            <button class="p-mini" type="button" data-buy="${p.id}">Заказать</button>
+          </div>
+        </div>
+      `).join('');
+
+      const sum = document.getElementById('productsSum');
+      if (sum) sum.textContent = money(products.reduce((a,x)=>a+x.price,0));
+
+      box.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button[data-buy]');
+        if (!btn) return;
+        const id = btn.getAttribute('data-buy');
+        const pr = products.find(x=>x.id===id);
+        if (!pr) return;
+
+        const tab = document.querySelector('.tabs .tab[data-tab="order"]');
+        if (tab) tab.click();
+        const productInput = document.getElementById('orderProduct');
+        if (productInput) productInput.value = pr.name;
+      });
+    })();
+  </script>
+
+  <script>
+    // ===================== "GA-like" scoring proxy on Play + automated checklists =====================
+    (function () {
+      var btn = document.getElementById('runLighthouseBtn');
+      var input = document.getElementById('siteUrlInput');
+      var out = document.getElementById('lighthouseResult');
+
+      function isOn(id){ var el = document.getElementById(id); return el ? el.checked : true; }
+      function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+      function pct(n){ return Math.round(clamp(n,0,100)); }
+      function safeUrl(u){ try { return new URL(u); } catch (e) { return null; } }
+
+      function gaProxySignals(urlStr){
+        var u = safeUrl(urlStr);
+        var seed = (u.hostname.length * 37 + u.pathname.length * 13) % 1000;
+        var sessions = 5000 + seed * 9;
+        var bounce = clamp(35 + (seed % 40), 25, 80);
+        var engagement = clamp(30 + (seed % 55), 20, 90);
+        var conv = clamp(0.8 + (seed % 40) / 10, 0.5, 6);
+        return { sessions:sessions, bounce:bounce, engagement:engagement, conversion:conv };
+      }
+
+      function scoreFromSignals(sig){
+        var ux = (sig.engagement * 0.55) + ((100 - sig.bounce) * 0.35) + (sig.conversion * 10 * 0.10);
+        return pct(ux);
+      }
+
+      function webChecksProxy(urlStr){
+        var u = safeUrl(urlStr);
+        var https = u && u.protocol === 'https:';
+        var hasWww = u && u.hostname.startsWith('www.');
+        var deep = u && u.pathname.length > 1;
+
+        var seo = 65 + (https ? 10 : -10) + (hasWww ? 2 : 0) + (deep ? -3 : 3);
+        var perf = 60 + (deep ? -6 : 4);
+        var best = 62 + (https ? 8 : -8);
+        var sec = 55 + (https ? 18 : -18);
+        var isLocal = u && (u.hostname === 'localhost' || u.hostname.endsWith('.local'));
+        var stability = isLocal ? 40 : 68 + (https ? 6 : -6);
+
+        return {
+          seo: pct(seo),
+          performance: pct(perf),
+          bestPractices: pct(best),
+          security: pct(sec),
+          stability: pct(stability)
+        };
+      }
+
+      function buildImprovements(scores, sig){
+        var list = [];
+        if (scores.security < 75) list.push({ t:"Security headers + HTTPS", d:"HSTS, CSP, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. Включить HTTPS + редиректы.", tag:"SECURITY" });
+        if (scores.stability < 75) list.push({ t:"Стабильность: мониторинг 5xx + запрет JSON в UI", d:"Алерты на 5xx, synthetic checks; тест “нет JSON-конфигов в DOM”; healthcheck + error budget.", tag:"STABILITY" });
+        if (scores.seo < 75) list.push({ t:"SEO базовое: мета/robots/sitemap", d:"title/description, canonical, sitemap.xml, robots.txt, OpenGraph, структура заголовков.", tag:"SEO" });
+        if (scores.bestPractices < 75) list.push({ t:"Best Practices: доступность и семантика", d:"alt, контраст, labels, фокус-стили, h1-h2, aria где нужно.", tag:"BEST" });
+        if (scores.performance < 75) list.push({ t:"Performance: оптимизация загрузки", d:"Сжать изображения, кеширование, lazy-load, убрать тяжёлые скрипты, критический CSS.", tag:"PERF" });
+
+        if (sig.bounce > 55) list.push({ t:"Снизить bounce rate", d:"Упростить первый экран: 1 главный CTA, меньше текста, быстрее загрузка, быстрый путь “что дальше”.", tag:"GA/UX" });
+        if (sig.conversion < 2.0) list.push({ t:"Поднять конверсию формы", d:"Убрать лишние поля, trust-блок, inline ошибки, автозаполнение, скорость ответа.", tag:"GA/CR" });
+
+        if (!list.length) list.push({ t:"Всё выглядит неплохо", d:"Скоринг высокий — можно переходить к тонкой оптимизации и экспериментам.", tag:"OK" });
+        return list.slice(0, 6);
+      }
+
+      function renderImprovements(items){
+        var box = document.getElementById('improvementsList');
+        if (!box) return;
+        box.innerHTML = items.map(function (it) {
+          return (
+            '<div class="imp-item">' +
+              '<div class="left">' +
+                '<div class="t">' + it.t + '</div>' +
+                '<div class="d">' + it.d + '</div>' +
+              '</div>' +
+              '<span class="tag">' + it.tag + '</span>' +
+            '</div>'
+          );
+        }).join('');
+      }
+
+      function setSubScore(id, v){
+        var el = document.getElementById(id);
+        if (el) el.textContent = pct(v) + '%';
+      }
+
+      function applyAutoChecklist(scores){
+        var autoBoxes = document.querySelectorAll('#checklistStability input[type="checkbox"][data-auto="true"]');
+        autoBoxes.forEach(function (cb) { cb.checked = false; });
+
+        var map = [
+          { idx:0, ok: scores.stability >= 75 },
+          { idx:1, ok: scores.stability >= 75 },
+          { idx:2, ok: scores.bestPractices >= 70 },
+          { idx:3, ok: scores.bestPractices >= 70 },
+          { idx:4, ok: scores.seo >= 70 }
+        ];
+        map.forEach(function (m) {
+          if (autoBoxes[m.idx]) autoBoxes[m.idx].checked = !!m.ok;
+        });
+      }
+
+      function recomputeTotalScore(){
+        var weights = { sum:0, got:0 };
+        var cbs = document.querySelectorAll('.audit-view.is-active input[type="checkbox"][data-weight]');
+        cbs.forEach(function (cb) {
+          var w = Number(cb.getAttribute('data-weight') || '0');
+          weights.sum += w;
+          if (cb.checked) weights.got += w;
+        });
+
+        var qBlocks = document.querySelectorAll('.audit-view.is-active .q');
+        var qSum = 0, qGot = 0;
+        qBlocks.forEach(function (q) {
+          var w = Number(q.getAttribute('data-qweight') || '0');
+          var name = (q.querySelector('input[type="radio"]') || {}).name;
+          var checked = name ? document.querySelector('input[name="'+name+'"]:checked') : null;
+          var val = checked ? Number(checked.value) : 3;
+          qSum += w * 5;
+          qGot += w * val;
+        });
+
+        var checklistScore = weights.sum ? (weights.got / weights.sum) * 100 : 0;
+        var surveyScore = qSum ? (qGot / qSum) * 100 : 0;
+
+        var total = pct(checklistScore * 0.75 + surveyScore * 0.25);
+
+        var totalEl = document.getElementById('scoreTotal');
+        var labelEl = document.getElementById('scoreLabel');
+        if (totalEl) totalEl.textContent = total;
+        if (labelEl) labelEl.textContent = total >= 85 ? 'Отлично' : total >= 70 ? 'Нормально' : 'Нужно улучшать';
+
+        var rec = document.getElementById('recommendText');
+        if (rec) {
+          rec.textContent =
+            total >= 85 ? 'Закрепить: мониторинг, quality-gates, улучшать перф/SEO итеративно.' :
+            total >= 70 ? 'Сфокусироваться на авто-чеклистах + стабильности и критических сценариях.' :
+            'Сначала закрыть stability + security + критичные проверки. Потом — SEO и перф.';
+        }
+      }
+
+      function runPlay(){
+        var u = (input && input.value || '').trim();
+        var parsed = safeUrl(u);
+        if (!parsed) { out.textContent = 'Ошибка: введи корректный URL (например https://example.com).'; return; }
+
+        if (!isOn('toggleLighthouse') && !isOn('toggleSecurity')) {
+          out.textContent = 'Модули LIGHTHOUSE/SECURITY выключены в SCHEDULE — включи и запусти Play ещё раз.';
+          return;
+        }
+
+        var sig = gaProxySignals(u);
+        var uxScore = scoreFromSignals(sig);
+        var web = webChecksProxy(u);
+
+        out.innerHTML =
+          '<div><strong>GA-like (proxy)</strong>: engagement ' + sig.engagement + '% · bounce ' + sig.bounce + '% · conversion ' + sig.conversion.toFixed(1) + '%</div>' +
+          '<div style="margin-top:8px;"><strong>Proxy scores</strong>: SEO ' + web.seo + ' · PERF ' + web.performance + ' · BEST ' + web.bestPractices + ' · SEC ' + web.security + ' · STAB ' + web.stability + ' · UX ' + uxScore + '</div>' +
+          '<div class="muted" style="margin-top:8px;">Примечание: для реального GA4 скоринга нужен backend и GA4 Data API. Здесь — proxy.</div>';
+
+        setSubScore('sProcess', 70);
+        setSubScore('sAuto', 65);
+        setSubScore('sQuality', Math.round((web.bestPractices + web.seo) / 2));
+        setSubScore('sDataObs', 60);
+        setSubScore('sRisk', 55);
+        setSubScore('sStability', Math.round((web.stability + uxScore) / 2));
+
+        applyAutoChecklist({ seo:web.seo, bestPractices:web.bestPractices, security:web.security, stability:web.stability, performance:web.performance });
+        renderImprovements(buildImprovements({ seo:web.seo, bestPractices:web.bestPractices, security:web.security, stability:web.stability, performance:web.performance }, sig));
+        recomputeTotalScore();
+      }
+
+      if (btn) btn.addEventListener('click', runPlay);
+
+      document.addEventListener('change', function (e) {
+        var t = e.target;
+        if (!t) return;
+        if (t.matches('.audit-view.is-active input[type="checkbox"][data-weight], .audit-view.is-active input[type="radio"]')) {
+          recomputeTotalScore();
+        }
+      });
+
+      recomputeTotalScore();
+    })();
+  </script>
+
+  <script>
+    // ===================== Risks: seed risks + counters (fallback) =====================
+    (function () {
+      var riskTable = document.getElementById('riskTable');
+      if (!riskTable) return;
+      if (riskTable.children && riskTable.children.length > 0) return;
+
+      var risks = [
+        { title:"5xx на важных страницах", severity:"high", category:"web", desc:"Ссылки на документы/соглашения отдают Internal Error → падение доверия/конверсии." },
+        { title:"Технический JSON виден пользователю", severity:"high", category:"web", desc:"Конфиг форм отображается в UI как текст → выглядит как сломанный сайт." },
+        { title:"Сломанные CTA/маршруты", severity:"med", category:"web", desc:"Разные карточки ведут на один и тот же url или на несуществующие страницы." },
+        { title:"Перемешан контент сервисов", severity:"med", category:"web", desc:"Описание/контакты не соответствуют сервисам → ошибка позиционирования." },
+        { title:"Нет мониторинга 5xx/uptime", severity:"high", category:"process", desc:"Проблемы узнаются от пользователей, нет алертов и error budget." },
+        { title:"Flaky автотесты ломают CI", severity:"med", category:"process", desc:"Нет карантина, нет исправления топ-10 флейков." },
+        { title:"Нет stability testing (long-run)", severity:"med", category:"process", desc:"Нет регламента прогонов, нет контроля деградации и утечек." },
+        { title:"Регресс из-за отсутствия критичных тестов", severity:"high", category:"process", desc:"Ключевые сценарии не покрыты автоматизацией/смоуком." },
+        { title:"Непрозрачные метрики качества", severity:"med", category:"process", desc:"Нет единого матрика KPI/целей/трендов." },
+        { title:"Долгий TTFB/тяжёлый главный экран", severity:"med", category:"web", desc:"Падает перф и растёт bounce → нужна оптимизация ресурсов." },
+        { title:"Нет CSP/нестрогие заголовки", severity:"high", category:"web", desc:"Уязвимости XSS/Clickjacking → включить CSP/HSTS/Frame-Ancestors." },
+        { title:"Нет регламента релиза", severity:"med", category:"process", desc:"Сюрпризы на проде → ввести DoD/релизный чек-лист/rollback." }
+      ];
+
+      function severityRank(s){ return s === 'high' ? 3 : s === 'med' ? 2 : 1; }
+      function set(id,val){ var el=document.getElementById(id); if(el) el.textContent=String(val); }
+
+      function renderRiskCounters(list){
+        set('riskCountAll', list.length);
+        set('riskCountHigh', list.filter(r => r.severity==='high').length);
+        set('riskCountMed', list.filter(r => r.severity==='med').length);
+        set('riskCountLow', list.filter(r => r.severity==='low').length);
+      }
+
+      function renderRiskTable(list){
+        riskTable.innerHTML = list.map(function (r) {
+          return (
+            '<div class="imp-item" style="margin-bottom:10px;">' +
+              '<div class="left">' +
+                '<div class="t">' + r.title + '</div>' +
+                '<div class="d">' + r.desc + '</div>' +
+                '<div class="d muted2">Категория: ' + r.category + '</div>' +
+              '</div>' +
+              '<span class="tag">' + r.severity.toUpperCase() + '</span>' +
+            '</div>'
+          );
+        }).join('') || '<div class="hint">Нет рисков.</div>';
+      }
+
+      function applyFilters(){
+        var filterBtn = document.querySelector('.risk-filters .filter-btn.is-active');
+        var filter = filterBtn ? filterBtn.getAttribute('data-filter') : 'all';
+        var catSel = document.getElementById('riskCategorySelect');
+        var cat = catSel ? catSel.value : 'all';
+        var sortSel = document.getElementById('riskSortSelect');
+        var sort = sortSel ? sortSel.value : 'severity_desc';
+
+        var filtered = risks.slice();
+        if (filter !== 'all') filtered = filtered.filter(r => r.severity === filter);
+        if (cat !== 'all') filtered = filtered.filter(r => r.category === cat);
+
+        if (sort === 'severity_desc') filtered.sort((a,b)=>severityRank(b.severity)-severityRank(a.severity));
+        if (sort === 'severity_asc') filtered.sort((a,b)=>severityRank(a.severity)-severityRank(b.severity));
+        if (sort === 'title_asc') filtered.sort((a,b)=>a.title.localeCompare(b.title));
+        if (sort === 'category_asc') filtered.sort((a,b)=>a.category.localeCompare(b.category));
+
+        renderRiskCounters(risks);
+        renderRiskTable(filtered);
+      }
+
+      renderRiskCounters(risks);
+      applyFilters();
+
+      document.addEventListener('click', function (e) {
+        var b = e.target.closest('.risk-filters .filter-btn');
+        if (!b) return;
+        document.querySelectorAll('.risk-filters .filter-btn').forEach(x=>x.classList.remove('is-active'));
+        b.classList.add('is-active');
+        applyFilters();
+      });
+
+      var catSel = document.getElementById('riskCategorySelect');
+      var sortSel = document.getElementById('riskSortSelect');
+      if (catSel) catSel.addEventListener('change', applyFilters);
+      if (sortSel) sortSel.addEventListener('change', applyFilters);
+    })();
+  </script>
+
+  <script>
+    // ===================== Metrics: fill demo KPI values (fallback) =====================
+    (function () {
+      var set = (id, val) => { var el = document.getElementById(id); if (el && (el.textContent === '—' || el.textContent.trim()==='')) el.textContent = val; };
+      set('kpiFlaky', '3.2%');
+      set('kpiMttr', '2h 10m');
+      set('kpiLead', '3.6d');
+      set('kpiEscaped', '6');
+      set('kpiLtv', '$420');
+      set('kpiBugs', '48');
+      set('kpiCriticalTests', '27');
+      set('kpiMatrix', 'OK');
+    })();
+  </script>
+
+  <script>
+    // ===================== Telegram report: order sends full report via backend =====================
+    (function(){
+      const API_SEND_REPORT_URL = "/api/send_report";
+      const TG_BOT_USERNAME = "YOUR_BOT_USERNAME"; // <-- поставь своего бота (без @)
+
+      function normalizeTelegramHandle(v) {
+        const raw = (v || "").trim();
+        if (!raw) return null;
+        const h = raw.startsWith("@") ? raw : ("@" + raw);
+        if (!/^@[A-Za-z0-9_]{5,32}$/.test(h)) return null;
+        return h;
+      }
+
+      function chunkText(text, size) {
+        const chunks = [];
+        for (let i = 0; i < text.length; i += size) chunks.push(text.slice(i, i + size));
+        return chunks;
+      }
+
+      function getText(id, fallback = "—") {
+        const el = document.getElementById(id);
+        const t = el ? (el.textContent || "").trim() : "";
+        return t || fallback;
+      }
+
+      function buildFullReportMarkdown() {
+        const now = new Date();
+        const lines = [];
+
+        lines.push(`# QA Audit Report`);
+        lines.push(`Дата: ${now.toLocaleString("ru-RU")}`);
+        lines.push(`Проект: ${getText("activeProjectName")}`);
+        lines.push(`Итоговый скор: ${getText("scoreTotal","0")}%`);
+        lines.push(`Статус: ${getText("scoreLabel")}`);
+        lines.push("");
+
+        lines.push(`## Subscores`);
+        lines.push(`- Процессы: ${getText("sProcess","0%")}`);
+        lines.push(`- Автоматизация: ${getText("sAuto","0%")}`);
+        lines.push(`- Качество: ${getText("sQuality","0%")}`);
+        lines.push(`- Данные/наблюдаемость: ${getText("sDataObs","0%")}`);
+        lines.push(`- Риски: ${getText("sRisk","0%")}`);
+        lines.push(`- Стабильность: ${getText("sStability","0%")}`);
+        lines.push("");
+
+        const rec = getText("recommendText", "");
+        if (rec && rec !== "—") {
+          lines.push(`## Рекомендация`);
+          lines.push(rec);
+          lines.push("");
+        }
+
+        const activeAudit = document.querySelector(".audit-view.is-active") || document;
+        const checks = Array.from(activeAudit.querySelectorAll(".check"));
+        if (checks.length) {
+          lines.push(`## Чеклисты`);
+          for (const row of checks) {
+            const cb = row.querySelector('input[type="checkbox"]');
+            const text = (row.querySelector("span")?.textContent || "").trim();
+            const w = cb?.getAttribute("data-weight") || "";
+            const mark = cb?.checked ? "✅" : "⬜️";
+            lines.push(`${mark} ${text}${w ? ` (вес ${w})` : ""}`);
+          }
+          lines.push("");
+        }
+
+        const improvements = Array.from(document.querySelectorAll("#improvementsList .imp-item"));
+        if (improvements.length) {
+          lines.push(`## Улучшения по сайту`);
+          improvements.forEach((it, idx) => {
+            const t = (it.querySelector(".t")?.textContent || "").trim();
+            const d = (it.querySelector(".d")?.textContent || "").trim();
+            const tag = (it.querySelector(".tag")?.textContent || "").trim();
+            if (t) lines.push(`${idx + 1}. **${t}** ${tag ? `[_${tag}_]` : ""}${d ? ` — ${d}` : ""}`);
+          });
+          lines.push("");
+        }
+
+        const lhEl = document.getElementById("lighthouseResult");
+        if (lhEl && !lhEl.textContent.includes("Нет данных")) {
+          lines.push(`## Скоринг (Play)`);
+          const txt = (lhEl.textContent || "").trim();
+          if (txt) lines.push(txt);
+          lines.push("");
+        }
+
+        return lines.join("\n");
+      }
+
+      async function postJson(url, data) {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        let json = null;
+        try { json = await res.json(); } catch (_) {}
+        return { ok: res.ok, status: res.status, json };
+      }
+
+      function ensureClientKey() {
+        const key = localStorage.getItem("tg_client_key");
+        if (key) return key;
+        const newKey = (crypto?.randomUUID ? crypto.randomUUID() : (Date.now() + "_" + Math.random().toString(16).slice(2)));
+        localStorage.setItem("tg_client_key", newKey);
+        return newKey;
+      }
+
+      function showBotStartHint(clientKey) {
+        const hint = document.getElementById("tgDeepLinkHint");
+        const link = document.getElementById("tgDeepLink");
+        if (!hint || !link) return;
+        link.href = `https://t.me/${TG_BOT_USERNAME}?start=${encodeURIComponent(clientKey)}`;
+        hint.style.display = "block";
+      }
+
+      async function sendReportToTelegram() {
+        const tg = normalizeTelegramHandle(document.getElementById("orderTelegram")?.value);
+        const hint = document.getElementById("orderHint");
+        const btn = document.getElementById("orderSubmitBtn");
+
+        if (!tg) {
+          if (hint) hint.textContent = "Введи корректный Telegram username, например @nickname";
+          return;
+        }
+
+        const clientKey = ensureClientKey();
+        const report = buildFullReportMarkdown();
+        const chunks = chunkText(report, 3500);
+
+        if (btn) btn.disabled = true;
+        if (hint) hint.textContent = "Отправляю отчёт…";
+
+        const payload = {
+          clientKey,
+          telegram: tg,
+          project: document.getElementById("orderProject")?.value || "",
+          product: document.getElementById("orderProduct")?.value || "",
+          comment: document.getElementById("orderPain")?.value || "",
+          chunks
+        };
+
+        const resp = await postJson(API_SEND_REPORT_URL, payload);
+
+        if (btn) btn.disabled = false;
+
+        if (resp.ok && resp.json?.ok) {
+          if (hint) hint.textContent = "Отчёт отправлен в Telegram ✅";
+          return;
+        }
+
+        showBotStartHint(clientKey);
+
+        if (resp.json?.needStart) {
+          if (hint) hint.textContent = "Нужно: открыть бота и нажать Start (один раз), потом снова нажать «Заказать»";
+          return;
+        }
+
+        if (hint) hint.textContent = `Ошибка отправки (HTTP ${resp.status}). Проверь backend / бота.`;
+      }
+
+      (function () {
+        const form = document.getElementById("orderForm");
+        if (!form) return;
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          sendReportToTelegram();
+        });
+      })();
+    })();
+  </script>
+</body>
+</html>
