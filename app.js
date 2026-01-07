@@ -1,3 +1,17 @@
+// ===== BOT TOKEN (server-only; safe for browser) =====
+(() => {
+  // In browser there is no `process`, so guard it
+  const token =
+    (typeof process !== "undefined" && process?.env)
+      ? process.env.BOT_TOKEN
+      : undefined;
+
+  if (!token) {
+    console.warn("BOT_TOKEN is not set — bot disabled");
+  }
+})();
+
+
 // =================== UTIL ===================
 const LS = {
   tab: "qa.tab",
