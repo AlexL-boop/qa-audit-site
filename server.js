@@ -4,13 +4,9 @@ import fetch from "node-fetch";
 const app = express();
 app.use(express.json());
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const BOT_USERNAME = process.env.BOT_USERNAME; // без @
-
-if (!BOT_TOKEN) {
-  console.error("ERROR: BOT_TOKEN is not set");
-  process.exit(1);
-}
+const BOT_TOKEN = "";
+const BOT_USERNAME = "";
+ 
 
 const keyToChat = new Map();
 
